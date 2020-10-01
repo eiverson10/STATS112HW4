@@ -12,7 +12,7 @@ output:
 
 
 ```{r setup, include=FALSE}
-#knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
+knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
 ```
 
 ```{r libraries}
@@ -101,7 +101,6 @@ These exercises will reiterate what you learned in the "Mapping data with R" tut
 
   1. Add the `Starbucks` locations to a world map. Add an aesthetic to the world map that sets the color of the points according to the ownership type. What, if anything, can you deduce from this visualization?  
 
-#is my deduction correct?
 ```{r starbucks-map}
 # Get the map information
 world <- get_stamenmap(
@@ -112,13 +111,15 @@ world <- get_stamenmap(
 # Plot the points on the map
 ggmap(world) + # creates the map "background"
   geom_point(data = Starbucks, 
-             aes(x = Longitude, y = Latitude, color = "Ownership Type"), 
-             alpha = .3, 
-             size = .1) +
-  theme_map()
+             aes(x = Longitude, y = Latitude, color = `Ownership Type`),
+             alpha = .5, 
+             size = .6) +
+  scale_color_viridis_d("viridis") +
+  theme_map() + 
+  theme(legend.background = element_blank())
 ```
 
-They all appear to have the same owner type "licensed." 
+All the Starbucks in the United States appear to be either company owned or Licensed. The joint ventures appear to be limited to Europe and Asia. The Franchiese appear only in western Europe. 
 
 
   2. Construct a new map of Starbucks locations in the Twin Cities metro area (approximately the 5 county metro area).  
@@ -137,14 +138,13 @@ ggmap(twin_cities_starbucks) + # creates the map "background"
              #alpha = .3, 
              size = .6) +
   theme_map() +
-  theme(legend.background = element_blank())
+  theme(legend.background = element_blank()) 
 ```
 
   3. In the Twin Cities plot, play with the zoom number. What does it do?  (just describe what it does - don't actually include more than one map).  
 
-#is this right????
-  Without changing the latitude or longitude normally a bigger number would zoom in more however in this case it does not. 
-
+ Bigger numbers of zoom show more detail and are meant to be used with smaller areas. If you increase the zoom without changing the dimensions of the box the map almost appears smaller. 
+ 
   4. Try a couple different map types (see `get_stamenmap()` in help and look at `maptype`). Include a map with one of the other map types.  
 
 ```{r}
@@ -183,8 +183,8 @@ ggmap(twin_cities_starbucks) + # creates the map "background"
              size = .6) +
   theme_map() +
   theme(legend.background = element_blank()) + 
-  geom_point(aes(x =-93.170278, y = 44.9382502, color = "blue")) +
-  annotate(geom = "text", label = "Macalester College", y = 44.9382502, x = -93.170278, color = "orange")
+  annotate(geom = "text", label = "Macalester College", y = 44.9382502, x = -93.170278, color = "orange") +
+  annotate(geom = "point",y = 44.9382502, x = -93.170278, color = "blue" )
 ```
 
 ### Choropleth maps with Starbucks data (`geom_map()`)
@@ -194,7 +194,7 @@ The example I showed in the tutorial did not account for population of each stat
 ```{r}
 
 census_pop_est_2018 <- read_csv("https://www.dropbox.com/s/6txwv3b4ng7pepe/us_census_2018_state_pop_est.csv?dl=1") %>% #Renames this whole code chunk to be located with the name census_pop_est_2018. It also reads in the csv file with the data from census. 
-  separate(state, into = c("dot","state"), extra = "merge") %>% #Separates the dot and the state name, the extra part of the function makes sure that states with two words don't get seperated into seperate rows (ex. north dakota)
+  separate(state, into = c("dot","state"), extra = "merge") %>% #Separates the dot and the state name, the extra part of the function makes sure that states with two words don't get separated into seperate rows (ex. north dakota)
   select(-dot) %>% #Gets rid of the dot which had been separated into its own column
   mutate(state = str_to_lower(state)) #puts all the states into lowercase letters
 
@@ -207,7 +207,7 @@ starbucks_with_2018_pop_est <- #Allows this code chunk to be accessible with "st
 
   6. **`dplyr` review**: Look through the code above and describe what each line of code does.
 
-Code above is now anotated.
+Code above is now annotated.
 
   7. Create a choropleth map that shows the number of Starbucks per 10,000 people on a map of the US. Use a new fill color, add points for all Starbucks in the US (except Hawaii and Alaska), add an informative title for the plot, and include a caption that says who created the plot (you!). Make a conclusion about what you observe.
   
@@ -235,7 +235,7 @@ starbucks_with_2018_pop_est %>%
   theme_map() +
   theme(legend.background = element_blank())
 ```
-It appears that although there are thousands of starbucks throughout the United States that California has the most amount of starbucks per 10,000 people. 
+It appears that although there are thousands of Starbucks throughout the United States that California has the most amount of Starbucks per 10,000 people. 
 
 ### A few of your favorite things (`leaflet`)
 
@@ -319,21 +319,6 @@ Stations <- read_csv("http://www.macalester.edu/~dshuman1/data/112/DC-Stations.c
   9. Use the latitude and longitude variables in `Stations` to make a visualization of the total number of departures from each station in the `Trips` data. Use either color or size to show the variation in number of departures. This time, plot the points on top of a map. Use any of the mapping tools you'd like.
 
 ```{r}
-total_departures_withlatlon <- Stations %>%
-  left_join(Trips,
-            by = c("name"= "sstation")) %>%  
-  group_by(name) %>% 
-  mutate(total_departures =  n()) 
-
-total_departures_withlatlon
-
-dep <- colorFactor("viridis", 
-                     domain = total_departures_withlatlon$total_departures) 
-
-
-```
-#The good version!!
-```{r}
 total_departures_withlatlong <- Trips %>%
   left_join(Stations,
             by = c("sstation" = "name")) %>% 
@@ -356,26 +341,6 @@ leaflet(data = total_departures_withlatlong) %>%
             opacity = 0.5, 
             title = "Number of Depatures by Station", 
             position = "bottomright")
-```
-
- 
-#never ever run again 
-```{r}
-
-#leaflet
-#leaflet(data = total_departures_withlatlon) %>% 
-  #addTiles() %>% 
-  #addCircles(data = total_departures_withlatlon, 
-             #lng = ~long, 
-             #lat = ~lat, 
-             #label = ~name, 
-             #color = ~pal(name)) %>%
-  #addLegend(pal = pal, 
-            #values = ~total_departures, 
-           # opacity = 0.5, 
-            #title = "Total Number of Departures from Each Station",
-           # position = "bottomright")
-
 ```
 
   
@@ -414,7 +379,7 @@ leaflet(data = total_departures_casual) %>%
 
 ```
  
-The biggest percent departures by causal users are in the tourist hot spots of DC. Near the mall and monuments. 
+The biggest percent departures by causal users are in the tourist hot spots of DC. Near the mall and monuments. So the pattern for casual users (aka not commuters) is to use the bicycles in the tourist areas. 
 
   
 ### COVID-19 data
@@ -423,7 +388,6 @@ The following exercises will use the COVID-19 data from the NYT.
 
   11. Create a map that colors the states by the most recent cumulative number of COVID-19 cases (remember, these data report cumulative numbers so you don't need to compute that). Describe what you see. What is the problem with this map?
 
-#get help
 
 ```{r}
 lower_case_nam <- covid19 %>% 
@@ -445,7 +409,7 @@ lower_case_nam %>%
   theme(legend.background = element_blank())
 ```
   
-The Problem with this map is that it does not take into account the population of each state. So California, Texas, New York, and Florida look like they have a higher cumulative case count than other states, which is true. However without taking into account the population of each state it does not accuratley depict the rate of COVID-19 in each state. 
+The Problem with this map is that it does not take into account the population of each state. So California, Texas, New York, and Florida  have a higher cumulative case count than other states, but they also have much higher populations than say North Dakota. Without taking into account the population of each state it does not accurately depict the rate of COVID-19 in each state. 
   
   12. Now add the population of each state to the dataset and color the states by most recent cumulative cases/10,000 people. See the code for doing this with the Starbucks data. You will need to make some modifications. 
 
@@ -472,7 +436,6 @@ covid_with_populations
 
 ```
 
-#get help
 
   
   13. **CHALLENGE** Choose 4 dates spread over the time period of the data and create the same map as in exercise 12 for each of the dates. Display the four graphs together using faceting. What do you notice?
@@ -502,6 +465,7 @@ covid19%>%
   facet_wrap(vars(date))
 
 ```
+The further into the pandemic we have gotten the cases per 10,000 have occurred (duh). But you can see for example New York state has had issues with the proportion of COVID19 cases to 10,000 people since May. And slowly other states' proportions have gotten worse. For example Louisiana's has been bad since july but seems to have sky rocketed in September. 
 
 ## Minneapolis police stops
 
@@ -509,16 +473,13 @@ These exercises use the datasets `MplsStops` and `MplsDemo` from the `carData` l
 
   14. Use the `MplsStops` dataset to find out how many stops there were for each neighborhood and the proportion of stops that were for a suspicious vehicle or person. Sort the results from most to least number of stops. Save this as a dataset called `mpls_suspicious` and display the table.  
   
-```{r}
-MplsStops
-```
 
 ```{r}
 mpls_suspicious <- MplsStops %>% 
   mutate(susp = problem == "suspicious") %>% 
   group_by(neighborhood) %>% 
   summarize(total_stops = n(), 
-            prop_susp = sum(susp)/total_stops) %>% 
+            prop_suspicious = sum(susp)/total_stops) %>% 
   arrange(desc(total_stops))
   
 mpls_suspicious
@@ -548,9 +509,6 @@ leaflet(data = MplsStops) %>%
             title = "Each Stop made by the Minneapolis Police Department for the year 2017 Colored by Reason For the Stop ", 
             position = "bottomright")
 
-
-
-
 ```
 
 
@@ -562,19 +520,65 @@ mpls_nbhd <- st_read("Minneapolis_Neighborhoods/Minneapolis_Neighborhoods.shp", 
 
 
 ```{r}
-mplsDemStop <- mpls_suspicious %>% 
+mplsDemSus <- mpls_suspicious %>% 
   left_join(MplsDemo, by = "neighborhood")
 
 mpls_all <- mpls_nbhd %>% 
-  left_join(mplsDemStop, by = c("BDNAME" = "neighborhood")) %>% 
+  left_join(mplsDemSus, by = c("BDNAME" = "neighborhood")) %>% 
   rename("neighborhood" = "BDNAME")
+
+mpls_all
+  
 ```
 
   17. Use `leaflet` to create a map from the `mpls_all` data  that colors the neighborhoods by `prop_suspicious`. Display the neighborhood name as you scroll over it. Describe what you observe in the map.
+
+
+```{r}
+color_ti <- colorNumeric("viridis", domain = mpls_all$prop_suspicious)
+
+leaflet(data = mpls_all) %>% 
+  addTiles() %>% 
+  addPolygons(stroke = FALSE,
+              fillColor = ~color_ti(prop_suspicious),
+              fillOpacity = 0.6,
+              label = ~neighborhood)%>% 
+   addLegend(pal = color_ti, 
+            values = ~prop_suspicious,
+            bins =10,
+            opacity = 0.5, 
+            title = " Proportion of stops made 
+            by MPD for 'suspicious' activity by neighborhood", 
+            position = "bottomleft")
+
+```
+
+  
+The areas that have the largest proportion of stops do to 'suspicious' activity is just north of the MSP airport. 
   
   18. Use `leaflet` to create a map of your own choosing. Come up with a question you want to try to answer and use the map to help answer that question. Describe what your map shows. 
   
-  
+Make a graph that shows average house hold income by neighborhood. Compare this graph to the previous problem's graph. What do you notice? Is it what you expected?
+
+```{r}
+color_income <- colorNumeric("viridis", domain = mpls_all$hhIncome)
+
+leaflet(data = mpls_all) %>% 
+  addTiles() %>% 
+  addPolygons(stroke = FALSE,
+              fillColor = ~color_income(hhIncome),
+              fillOpacity = 0.6,
+              label = ~neighborhood)%>% 
+   addLegend(pal = color_income, 
+            values = ~hhIncome,
+            bins =10,
+            opacity = 0.5, 
+            title = "HH Income by neighborhood", 
+            position = "bottomleft")
+```
+
+Based on past experiences with police data I expected the lowest house hold income neighborhoods to have the have the highest proportion of stops due to "suspicious." The graph shows some of this but does not demonstrate this conclusively. The neighborhoods just north of the airport have a larger proportion of stops due to "suspicious" but these neighborhoods do not have the lowest average house hold income. They are not high income neighborhoods but they are not the lowest. That being said the lowest house hold income neighborhoods do have a high proportion (upwards of 0.6) of stops due to "suspicious."
+
 ## GitHub link
 
   19. Below, provide a link to your GitHub page with this set of Weekly Exercises. Specifically, if the name of the file is 04_exercises.Rmd, provide a link to the 04_exercises.md file, which is the one that will be most readable on GitHub.
